@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Python Online Assessment</title>
+<style>
+:root{
+  --bg:#0f1025;--sf:#181a35;--sf2:#1f2245;--bd:#2e3260;--fg:#e8eaf5;--dm:#8892c0;
+  --ac:#7c6cf0;--ag:rgba(124,108,240,.15);--ok:#2dd4bf;--bad:#f87171;--gold:#fbbf24;
+  --xp:#34d399;--warn:#f59e0b;
+}
+@media(prefers-color-scheme:light){
+  :root{--bg:#f3f4f8;--sf:#fff;--sf2:#eceef5;--bd:#d1d5e8;--fg:#1a1d35;--dm:#6b7194;
+    --ok:#0d9488;--bad:#dc2626;--gold:#d97706;--xp:#059669;--ag:rgba(124,108,240,.08);--warn:#d97706}
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  min-height:100%;display:flex;justify-content:center;padding:16px}
+.wrap{width:100%;max-width:900px;display:flex;flex-direction:column;padding:20px 0;gap:20px}
+.phase{display:none;flex-direction:column;gap:20px}
+.phase.on{display:flex}
+.logo{text-align:center;margin-bottom:8px}
+.logo h1{font-size:clamp(1.8rem,4.5vw,2.6rem);font-weight:800;
+  background:linear-gradient(135deg,var(--ac),var(--ok));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo p{color:var(--dm);font-size:1rem;margin-top:4px}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:24px;
+  display:flex;flex-direction:column;gap:16px}
+.card h2{font-size:1.1rem;color:var(--ac);text-align:center;letter-spacing:.02em}
+.inp{width:100%;padding:14px 18px;border-radius:12px;border:2px solid var(--bd);
+  background:var(--sf2);color:var(--fg);font-size:1.05rem;outline:none;transition:border .15s}
+.inp:focus{border-color:var(--ac)}
+.inp::placeholder{color:var(--dm)}
+textarea.inp{resize:vertical;min-height:80px;font-family:inherit}
+.btn{padding:14px 24px;border-radius:12px;border:none;color:#fff;font-weight:700;
+  font-size:1.05rem;cursor:pointer;width:100%;transition:all .15s;background:var(--ac)}
+.btn:hover{opacity:.88;transform:translateY(-1px)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn.go{font-size:1.15rem;background:linear-gradient(135deg,var(--ac),#9b87f5)}
+.btn.danger{background:var(--bad)}
+.btn.success{background:var(--ok)}
+.btn.warn{background:var(--warn)}
+.btn.outline{background:transparent;border:2px solid var(--ac);color:var(--ac)}
+.btn.outline:hover{background:var(--ac);color:#fff}
+.btn.sm{padding:8px 16px;font-size:.85rem;width:auto;border-radius:10px}
+.label{font-size:.9rem;font-weight:600;color:var(--dm)}
+.err-msg{color:var(--bad);font-size:.85rem;text-align:center;min-height:1.2em}
+.success-msg{color:var(--ok);font-size:.85rem;text-align:center}
+.row{display:flex;gap:10px;align-items:center}
+.row .inp{flex:1}
+.badge{font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:8px;display:inline-block}
+.badge.ok{background:rgba(45,212,191,.12);color:var(--ok)}
+.badge.pending{background:rgba(248,113,113,.1);color:var(--bad)}
+.badge.info{background:var(--ag);color:var(--ac)}
+
+/* Role Selection */
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.role-card{background:var(--sf);border:2px solid var(--bd);border-radius:20px;padding:32px 24px;
+  cursor:pointer;transition:all .2s;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
+.role-card:hover{border-color:var(--ac);background:var(--ag);transform:translateY(-3px)}
+.role-card .r-icon{font-size:3rem}
+.role-card .r-title{font-weight:800;font-size:1.2rem}
+.role-card .r-desc{color:var(--dm);font-size:.9rem}
+
+/* Topic Grid */
+.topics{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.topic-card{background:var(--sf);border:2px solid var(--bd);border-radius:16px;padding:20px;
+  cursor:pointer;transition:all .2s;display:flex;flex-direction:column;gap:10px;position:relative}
+.topic-card:hover:not(.full){border-color:var(--ac);background:var(--ag);transform:translateY(-2px)}
+.topic-card.full{opacity:.5;cursor:not-allowed}
+.topic-card .t-name{font-weight:700;font-size:1rem}
+.topic-card .t-seats{font-size:.8rem;color:var(--dm)}
+.topic-card .t-seats.almost{color:var(--gold)}
+.topic-card .t-badge{position:absolute;top:12px;right:12px;font-size:.7rem;font-weight:700;
+  padding:3px 10px;border-radius:8px;background:var(--bad);color:#fff}
+
+/* Admin topic list */
+.admin-topic{display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:14px;
+  background:var(--sf2);border:1px solid var(--bd);transition:background .15s}
+.admin-topic .at-name{flex:1;font-weight:700;font-size:1rem}
+.admin-topic .at-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* Question list in admin */
+.q-item{background:var(--sf2);border:1px solid var(--bd);border-radius:12px;padding:14px;
+  display:flex;flex-direction:column;gap:8px}
+.q-item .qi-text{font-weight:600;font-size:.95rem;white-space:pre-wrap}
+.q-item .qi-opts{display:flex;flex-wrap:wrap;gap:6px}
+.q-item .qi-opt{font-size:.8rem;padding:4px 10px;border-radius:8px;background:var(--bg);color:var(--dm)}
+.q-item .qi-opt.correct{background:rgba(45,212,191,.12);color:var(--ok);font-weight:700}
+.q-item .qi-actions{display:flex;justify-content:flex-end}
+
+/* Waiting / Room view */
+.room-header{text-align:center;padding:16px;background:var(--ag);border-radius:14px}
+.room-header h2{color:var(--ac);font-size:1.3rem}
+.room-header p{color:var(--dm);font-size:.9rem;margin-top:4px}
+.student-list{display:flex;flex-direction:column;gap:8px}
+.student-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;
+  background:var(--sf2);border:1px solid var(--bd)}
+.student-row .s-num{width:28px;height:28px;border-radius:50%;background:var(--ac);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0}
+.student-row .s-name{flex:1;font-weight:600;font-size:.95rem}
+.student-row .s-status{font-size:.8rem;font-weight:600;padding:4px 10px;border-radius:8px}
+.student-row .s-status.waiting{background:var(--ag);color:var(--ac)}
+.student-row .s-status.done{background:rgba(45,212,191,.12);color:var(--ok)}
+.student-row .s-score{font-family:monospace;font-weight:700;color:var(--xp);font-size:.95rem}
+.student-row.me{border-color:var(--ac);background:var(--ag)}
+
+/* Quiz */
+.quiz-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.quiz-top .qt-topic{font-size:.85rem;color:var(--ac);font-weight:700;
+  padding:4px 14px;border-radius:8px;background:var(--ag)}
+.quiz-top .qt-progress{font-family:monospace;font-weight:700;font-size:.9rem;color:var(--dm)}
+.timer-bar{height:6px;border-radius:3px;background:var(--sf2);overflow:hidden}
+.timer-fill{height:100%;border-radius:3px;background:var(--ac);transition:width .1s linear,background .3s;width:100%}
+.timer-fill.danger{background:var(--bad)}
+.q-card{background:var(--sf);border:1px solid var(--bd);border-radius:20px;padding:28px 24px;
+  display:flex;flex-direction:column;gap:16px}
+.q-num{font-size:.8rem;font-weight:700;color:var(--dm);text-transform:uppercase;letter-spacing:.04em}
+.q-text{font-size:1.1rem;font-weight:600;line-height:1.5}
+.q-code{font-family:'Courier New',monospace;font-size:.88rem;background:var(--bg);
+  padding:16px;border-radius:12px;overflow-x:auto;white-space:pre;line-height:1.6;color:var(--fg)}
+.options{display:flex;flex-direction:column;gap:10px}
+.opt-btn{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:14px;
+  border:2px solid var(--bd);background:var(--sf2);color:var(--fg);
+  font-size:1rem;cursor:pointer;text-align:left;transition:all .15s}
+.opt-btn:hover:not(.locked){border-color:var(--ac);background:var(--ag)}
+.opt-key{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;
+  justify-content:center;background:var(--bg);font-weight:700;font-size:.85rem;flex-shrink:0}
+.opt-btn.locked{pointer-events:none}
+.opt-btn.locked.correct{border-color:var(--ok);background:rgba(45,212,191,.1)}
+.opt-btn.locked.correct .opt-key{background:var(--ok);color:#fff}
+.opt-btn.locked.wrong{border-color:var(--bad);background:rgba(248,113,113,.08);opacity:.6}
+.opt-btn.locked.wrong .opt-key{background:var(--bad);color:#fff}
+.feedback{text-align:center;padding:14px;border-radius:14px;font-weight:700;font-size:1.05rem;display:none}
+.feedback.show{display:block}
+.feedback.right{background:rgba(45,212,191,.1);color:var(--ok)}
+.feedback.wrong{background:rgba(248,113,113,.08);color:var(--bad)}
+
+/* Scoreboard */
+.sb{text-align:center;display:flex;flex-direction:column;gap:20px;align-items:center}
+.sb .trophy{font-size:3.5rem}
+.sb .sb-title{font-size:clamp(1.5rem,3.5vw,2rem);font-weight:800;color:var(--gold)}
+.sb .sb-topic{font-size:1rem;color:var(--ac);font-weight:600;padding:6px 16px;
+  border-radius:10px;background:var(--ag);display:inline-block}
+.my-score-card{background:var(--sf);border:2px solid var(--ac);border-radius:18px;
+  padding:24px;text-align:center;width:100%;max-width:400px}
+.my-score-card .ms-label{font-size:.85rem;color:var(--dm);font-weight:600;margin-bottom:4px}
+.my-score-card .ms-score{font-family:monospace;font-weight:800;font-size:2.5rem;color:var(--xp)}
+.my-score-card .ms-detail{font-size:.9rem;color:var(--dm);margin-top:4px}
+.leaderboard{width:100%;background:var(--sf);border:1px solid var(--bd);border-radius:16px;overflow:hidden}
+.lb-header{padding:14px 20px;background:var(--sf2);font-weight:700;font-size:.9rem;color:var(--dm);
+  text-transform:uppercase;letter-spacing:.04em;text-align:left}
+.lb-row{display:flex;align-items:center;gap:12px;padding:12px 20px;border-top:1px solid var(--bd)}
+.lb-row.me-row{background:var(--ag)}
+.lb-rank{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0}
+.lb-rank.g{background:var(--gold);color:#000}
+.lb-rank.s{background:#c0c0c0;color:#000}
+.lb-rank.b{background:#cd7f32;color:#fff}
+.lb-rank.n{background:var(--sf2);color:var(--dm)}
+.lb-name{flex:1;font-weight:600;font-size:.95rem}
+.lb-correct{font-size:.8rem;color:var(--dm)}
+.lb-score{font-family:monospace;font-weight:700;color:var(--xp);font-size:1rem}
+.lb-waiting{color:var(--dm);font-style:italic;font-size:.85rem}
+.bottom-actions{display:flex;gap:12px;width:100%;max-width:400px}
+.bottom-actions .btn{flex:1}
+
+/* Top Bar */
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;
+  background:var(--sf);border:1px solid var(--bd);border-radius:14px;position:sticky;top:0;z-index:100}
+.topbar .tb-title{font-weight:700;font-size:1rem;color:var(--ac)}
+.topbar .tb-btns{display:flex;gap:8px}
+.topbar .tb-btn{padding:8px 18px;border-radius:10px;border:2px solid var(--ac);background:transparent;
+  color:var(--ac);font-weight:700;font-size:.85rem;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px}
+.topbar .tb-btn:hover{background:var(--ac);color:#fff}
+.topbar .tb-btn.active{background:var(--ac);color:#fff}
+
+/* Leaderboard Overlay */
+.lb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;
+  justify-content:center;align-items:flex-start;padding:40px 16px;overflow-y:auto}
+.lb-overlay.open{display:flex}
+.lb-panel{background:var(--bg);border:1px solid var(--bd);border-radius:20px;width:100%;max-width:850px;
+  padding:24px;display:flex;flex-direction:column;gap:20px;max-height:90vh;overflow-y:auto}
+.lb-panel-header{display:flex;justify-content:space-between;align-items:center}
+.lb-panel-header h2{font-size:1.3rem;font-weight:800;
+  background:linear-gradient(135deg,var(--ac),var(--ok));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.lb-close{width:36px;height:36px;border-radius:10px;border:1px solid var(--bd);background:var(--sf);
+  color:var(--fg);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.lb-close:hover{background:var(--bad);color:#fff;border-color:var(--bad)}
+.lb-room{background:var(--sf);border:1px solid var(--bd);border-radius:16px;overflow:hidden}
+.lb-room-header{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;
+  background:var(--sf2);cursor:pointer;transition:background .15s}
+.lb-room-header:hover{background:var(--ag)}
+.lb-room-header .rh-name{font-weight:700;font-size:1rem;display:flex;align-items:center;gap:8px}
+.lb-room-header .rh-count{font-size:.8rem;color:var(--dm);background:var(--bg);padding:3px 10px;border-radius:8px}
+.lb-room-header .rh-arrow{color:var(--dm);font-size:.9rem;transition:transform .2s}
+.lb-room-header.expanded .rh-arrow{transform:rotate(180deg)}
+.lb-room-body{display:none;padding:0}
+.lb-room-body.open{display:block}
+.lb-room-body .lb-row{display:flex;align-items:center;gap:12px;padding:10px 20px;border-top:1px solid var(--bd)}
+.lb-room-body .lb-row:first-child{border-top:none}
+.lb-room-body .lb-empty{padding:16px 20px;text-align:center;color:var(--dm);font-size:.85rem;font-style:italic}
+.lb-room-body .lb-active-note{padding:8px 20px;font-size:.8rem;color:var(--gold);background:rgba(251,191,36,.06);
+  border-top:1px solid var(--bd)}
+.lb-refresh{align-self:center;padding:10px 24px;border-radius:10px;border:1px solid var(--bd);
+  background:var(--sf);color:var(--ac);font-weight:600;font-size:.9rem;cursor:pointer}
+.lb-refresh:hover{background:var(--ag)}
+
+/* Radio options for correct answer */
+.opt-radio{display:flex;gap:10px;flex-wrap:wrap}
+.opt-radio label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.9rem;
+  padding:8px 14px;border-radius:10px;background:var(--sf2);border:2px solid var(--bd);transition:all .15s}
+.opt-radio label:hover{border-color:var(--ac)}
+.opt-radio input:checked + span{color:var(--ok);font-weight:700}
+.opt-radio label:has(input:checked){border-color:var(--ok);background:rgba(45,212,191,.08)}
+
+/* Status banner */
+.status-banner{text-align:center;padding:14px;border-radius:14px;font-weight:600;font-size:.95rem}
+.status-banner.waiting{background:rgba(245,158,11,.08);color:var(--warn);border:1px solid rgba(245,158,11,.2)}
+.status-banner.live{background:rgba(45,212,191,.08);color:var(--ok);border:1px solid rgba(45,212,191,.2)}
+
+@media(max-width:500px){
+  .topics{grid-template-columns:1fr}
+  .role-grid{grid-template-columns:1fr}
+  .bottom-actions{flex-direction:column}
+  .lb-panel{padding:16px}
+  .admin-topic{flex-wrap:wrap}
+  .admin-topic .at-actions{width:100%;justify-content:flex-end}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <span class="tb-title">Python Assessment</span>
+    <div class="tb-btns">
+      <button class="tb-btn" id="lb-tab" onclick="openLeaderboard()">📊 Leaderboard</button>
+      <button class="tb-btn" id="home-btn" onclick="goHome()">🏠 Home</button>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD OVERLAY -->
+  <div class="lb-overlay" id="lb-overlay" onclick="if(event.target===this)closeLeaderboard()">
+    <div class="lb-panel">
+      <div class="lb-panel-header">
+        <h2>📊 Leaderboard — All Rooms</h2>
+        <button class="lb-close" onclick="closeLeaderboard()">&times;</button>
+      </div>
+      <div id="lb-rooms-container"></div>
+      <button class="lb-refresh" onclick="fetchLeaderboard()">↻ Refresh</button>
+    </div>
+  </div>
+
+  <!-- ═══ PHASE 0: ROLE SELECT ═══ -->
+  <div class="phase on" id="ph-role">
+    <div class="logo">
+      <h1>Python Online Assessment</h1>
+      <p>Choose how you want to proceed</p>
+    </div>
+    <div class="role-grid">
+      <div class="role-card" onclick="showAdminLogin()">
+        <div class="r-icon">🛡️</div>
+        <div class="r-title">Admin</div>
+        <div class="r-desc">Create topics, add questions, and publish the assessment</div>
+      </div>
+      <div class="role-card" onclick="showStudentLogin()">
+        <div class="r-icon">🎓</div>
+        <div class="r-title">Student</div>
+        <div class="r-desc">Login and take the assessment on a published topic</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PHASE 1A: ADMIN LOGIN ═══ -->
+  <div class="phase" id="ph-admin-login">
+    <div class="logo">
+      <h1>🛡️ Admin Login</h1>
+      <p>Enter admin credentials to manage the assessment</p>
+    </div>
+    <div class="card">
+      <div>
+        <label class="label">User ID</label>
+        <input class="inp" id="admin-uid" placeholder="Enter admin user ID" autocomplete="off">
+      </div>
+      <div>
+        <label class="label">Password</label>
+        <input class="inp" id="admin-pass" type="password" placeholder="Enter admin password" autocomplete="off">
+      </div>
+      <div class="err-msg" id="admin-login-err"></div>
+      <button class="btn go" onclick="doAdminLogin()">Login as Admin</button>
+    </div>
+  </div>
+
+  <!-- ═══ PHASE 1B: ADMIN DASHBOARD ═══ -->
+  <div class="phase" id="ph-admin-dash">
+    <div class="logo">
+      <h1>🛡️ Admin Dashboard</h1>
+      <p>Add topics and questions, then publish the assessment</p>
+    </div>
+
+    <div id="admin-publish-status"></div>
+
+    <!-- Add Topic -->
+    <div class="card" id="admin-add-topic-card">
+      <h2>Add a Topic</h2>
+      <div class="row">
+        <input class="inp" id="new-topic-name" placeholder="e.g. Loops in Python" maxlength="60">
+        <button class="btn sm" onclick="adminAddTopic()">+ Add</button>
+      </div>
+      <div class="err-msg" id="topic-add-err"></div>
+    </div>
+
+    <!-- Topic List -->
+    <div class="card">
+      <h2>Topics (<span id="topic-count">0</span>)</h2>
+      <div id="admin-topic-list" style="display:flex;flex-direction:column;gap:10px">
+        <div style="text-align:center;color:var(--dm);padding:16px">No topics added yet</div>
+      </div>
+    </div>
+
+    <!-- Publish / Reset -->
+    <div id="admin-actions" style="display:flex;gap:12px">
+      <button class="btn go" id="publish-btn" onclick="adminPublish()">🚀 Publish Assessment</button>
+      <button class="btn danger sm" onclick="adminReset()" style="width:auto;white-space:nowrap">🗑️ Reset All</button>
+    </div>
+  </div>
+
+  <!-- ═══ PHASE 1C: ADMIN QUESTION EDITOR ═══ -->
+  <div class="phase" id="ph-admin-questions">
+    <div class="logo">
+      <h1>📝 Questions</h1>
+      <p id="aq-topic-name">Topic Name</p>
+    </div>
+
+    <!-- Existing questions -->
+    <div class="card">
+      <h2>Questions (<span id="aq-count">0</span>)</h2>
+      <div id="aq-list" style="display:flex;flex-direction:column;gap:10px">
+        <div style="text-align:center;color:var(--dm);padding:16px">No questions yet</div>
+      </div>
+    </div>
+
+    <!-- Add question form -->
+    <div class="card" id="aq-form-card">
+      <h2>Add a Question</h2>
+      <div>
+        <label class="label">Question Text</label>
+        <textarea class="inp" id="aq-text" placeholder="Type the question here. Use new lines for code snippets." rows="3"></textarea>
+      </div>
+      <div>
+        <label class="label">Option A</label>
+        <input class="inp" id="aq-opt-a" placeholder="Option A" maxlength="100">
+      </div>
+      <div>
+        <label class="label">Option B</label>
+        <input class="inp" id="aq-opt-b" placeholder="Option B" maxlength="100">
+      </div>
+      <div>
+        <label class="label">Option C</label>
+        <input class="inp" id="aq-opt-c" placeholder="Option C" maxlength="100">
+      </div>
+      <div>
+        <label class="label">Option D</label>
+        <input class="inp" id="aq-opt-d" placeholder="Option D" maxlength="100">
+      </div>
+      <div>
+        <label class="label">Correct Answer</label>
+        <div class="opt-radio">
+          <label><input type="radio" name="correct-ans" value="0"><span>A</span></label>
+          <label><input type="radio" name="correct-ans" value="1"><span>B</span></label>
+          <label><input type="radio" name="correct-ans" value="2"><span>C</span></label>
+          <label><input type="radio" name="correct-ans" value="3"><span>D</span></label>
+        </div>
+      </div>
+      <div class="err-msg" id="aq-err"></div>
+      <button class="btn" onclick="adminAddQuestion()">+ Add Question</button>
+    </div>
+
+    <button class="btn outline" onclick="backToAdminDash()">← Back to Dashboard</button>
+  </div>
+
+  <!-- ═══ PHASE 2: STUDENT LOGIN ═══ -->
+  <div class="phase" id="ph-login">
+    <div class="logo">
+      <h1>🎓 Student Login</h1>
+      <p>Enter your name and password to begin</p>
+    </div>
+    <div id="student-status-banner"></div>
+    <div class="card">
+      <h2>Student Login</h2>
+      <div>
+        <label class="label">Your Name</label>
+        <input class="inp" id="inp-name" placeholder="Enter your full name" maxlength="30" autocomplete="off">
+      </div>
+      <div>
+        <label class="label">Password <span style="font-weight:400;color:var(--dm)">(same as your name)</span></label>
+        <input class="inp" id="inp-pass" type="password" placeholder="Enter your name as password" maxlength="30" autocomplete="off">
+      </div>
+      <div class="err-msg" id="login-err"></div>
+      <button class="btn go" onclick="doLogin()">Login</button>
+    </div>
+  </div>
+
+  <!-- ═══ PHASE 3: TOPIC SELECT ═══ -->
+  <div class="phase" id="ph-topics">
+    <div class="logo">
+      <h1>Choose Your Topic</h1>
+      <p>Select a topic to begin your assessment</p>
+    </div>
+    <div class="err-msg" id="topic-err"></div>
+    <div class="topics" id="topic-grid"></div>
+  </div>
+
+  <!-- ═══ PHASE 4: WAITING ROOM ═══ -->
+  <div class="phase" id="ph-waiting">
+    <div class="room-header">
+      <h2 id="wait-topic"></h2>
+      <p id="wait-info"></p>
+    </div>
+    <div class="card">
+      <h2>Students in this Room</h2>
+      <div class="student-list" id="wait-students"></div>
+    </div>
+    <button class="btn go" id="start-btn" onclick="beginQuiz()">Start Assessment</button>
+  </div>
+
+  <!-- ═══ PHASE 5: QUIZ ═══ -->
+  <div class="phase" id="ph-quiz">
+    <div class="quiz-top">
+      <span class="qt-topic" id="quiz-topic"></span>
+      <span class="qt-progress" id="quiz-progress"></span>
+    </div>
+    <div class="timer-bar"><div class="timer-fill" id="timer-fill"></div></div>
+    <div class="q-card">
+      <div class="q-num" id="q-num"></div>
+      <div class="q-text" id="q-text"></div>
+      <div class="q-code" id="q-code" hidden></div>
+      <div class="options" id="q-opts"></div>
+    </div>
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ═══ PHASE 6: RESULTS ═══ -->
+  <div class="phase" id="ph-results">
+    <div class="sb" id="scoreboard"></div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+/* ── State ──────────────────────────────────────── */
+const socket = io();
+let role = "";
+let myName = "";
+let myTopic = -1;
+let myTopicName = "";
+let questions = [];
+let curQ = 0;
+let answered = false;
+let myScore = 0;
+let myCorrect = 0;
+let timerInt = null;
+let timeLeft = 0;
+const TIMER_SEC = 20;
+
+// Admin state
+let adminTopics = [];
+let editingTopicIndex = -1;
+let editingQuestions = [];
+let isPublished = false;
+
+/* ── Helpers ────────────────────────────────────── */
+function esc(s){ const d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
+function show(id){ document.querySelectorAll(".phase").forEach(p=>p.classList.remove("on"));
+  document.getElementById(id).classList.add("on"); }
+
+/* ── Role Selection ────────────────────────────── */
+function showAdminLogin(){ role="admin"; show("ph-admin-login"); }
+function showStudentLogin(){
+  role="student";
+  show("ph-login");
+  updateStudentBanner();
+}
+
+function goHome(){
+  role="";
+  show("ph-role");
+}
+
+/* ── Listen for state changes ──────────────────── */
+socket.on("assessment-state",(data)=>{
+  isPublished = data.published;
+  if(data.topics) adminTopics = data.topics;
+  updateStudentBanner();
+  if(role==="admin" && document.getElementById("ph-admin-dash").classList.contains("on")){
+    renderAdminTopics();
+  }
+});
+
+function updateStudentBanner(){
+  const el = document.getElementById("student-status-banner");
+  if(!el) return;
+  if(isPublished){
+    el.innerHTML = '<div class="status-banner live">✅ Assessment is LIVE — You can login and start</div>';
+  } else {
+    el.innerHTML = '<div class="status-banner waiting">⏳ Assessment not yet published — Please wait for the admin</div>';
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   ADMIN FLOW
+   ══════════════════════════════════════════════════ */
+
+function doAdminLogin(){
+  const uid = document.getElementById("admin-uid").value.trim();
+  const pass = document.getElementById("admin-pass").value.trim();
+  const errEl = document.getElementById("admin-login-err");
+  if(!uid || !pass){ errEl.textContent="Please fill both fields."; return; }
+  errEl.textContent="Logging in...";
+  socket.emit("admin-login",{userId:uid,password:pass},(res)=>{
+    if(!res.ok){ errEl.textContent=res.msg; return; }
+    errEl.textContent="";
+    adminTopics = res.topics;
+    isPublished = res.published;
+    show("ph-admin-dash");
+    renderAdminTopics();
+    renderPublishStatus();
+  });
+}
+
+function renderPublishStatus(){
+  const el = document.getElementById("admin-publish-status");
+  const addCard = document.getElementById("admin-add-topic-card");
+  const actions = document.getElementById("admin-actions");
+  if(isPublished){
+    el.innerHTML = '<div class="status-banner live">✅ Assessment is LIVE — Students can now join</div>';
+    addCard.style.display = "none";
+    actions.querySelector("#publish-btn").style.display = "none";
+  } else {
+    el.innerHTML = '';
+    addCard.style.display = "";
+    actions.querySelector("#publish-btn").style.display = "";
+  }
+}
+
+function renderAdminTopics(){
+  const list = document.getElementById("admin-topic-list");
+  document.getElementById("topic-count").textContent = adminTopics.length;
+  if(adminTopics.length === 0){
+    list.innerHTML = '<div style="text-align:center;color:var(--dm);padding:16px">No topics added yet</div>';
+    return;
+  }
+  list.innerHTML = adminTopics.map((t,i)=>{
+    const ready = t.questionCount > 0;
+    return `<div class="admin-topic">
+      <span class="at-name">${esc(t.name)}</span>
+      <span class="badge ${ready?'ok':'pending'}">${ready?t.questionCount+' Qs':'No Qs'}</span>
+      <div class="at-actions">
+        <button class="btn sm outline" onclick="openQuestionEditor(${i})">${ready?'View Qs':'Add Qs'}</button>
+        ${!isPublished?`<button class="btn sm warn" onclick="adminSkipQuestions(${i})">Auto-Generate</button>
+        <button class="btn sm danger" onclick="adminRemoveTopic(${i})">✕</button>`:''}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function adminAddTopic(){
+  const inp = document.getElementById("new-topic-name");
+  const errEl = document.getElementById("topic-add-err");
+  const name = inp.value.trim();
+  if(!name){ errEl.textContent="Enter a topic name."; return; }
+  errEl.textContent="";
+  socket.emit("admin-add-topic",{name},(res)=>{
+    if(!res.ok){ errEl.textContent=res.msg; return; }
+    inp.value="";
+    adminTopics.push({name:res.name, questionCount:0});
+    renderAdminTopics();
+  });
+}
+document.getElementById("new-topic-name").addEventListener("keydown",e=>{if(e.key==="Enter")adminAddTopic()});
+
+function adminRemoveTopic(index){
+  if(!confirm("Remove topic '"+adminTopics[index].name+"'?")) return;
+  socket.emit("admin-remove-topic",{index},(res)=>{
+    if(!res.ok){ alert(res.msg); return; }
+    adminTopics.splice(index,1);
+    renderAdminTopics();
+  });
+}
+
+function adminSkipQuestions(index){
+  socket.emit("admin-skip-questions",{topicIndex:index},(res)=>{
+    if(!res.ok){ alert(res.msg); return; }
+    adminTopics[index].questionCount = res.questionCount;
+    renderAdminTopics();
+  });
+}
+
+function adminPublish(){
+  const incomplete = adminTopics.filter(t=>t.questionCount===0);
+  if(adminTopics.length===0){ alert("Add at least one topic first."); return; }
+  if(incomplete.length>0){
+    alert("These topics have no questions:\n"+incomplete.map(t=>t.name).join("\n")+"\n\nAdd questions or click Auto-Generate.");
+    return;
+  }
+  if(!confirm("Publish the assessment? Students will be able to join.\n\nTopics: "+adminTopics.map(t=>t.name).join(", "))) return;
+  socket.emit("admin-publish",(res)=>{
+    if(!res.ok){ alert(res.msg); return; }
+    isPublished = true;
+    renderPublishStatus();
+    renderAdminTopics();
+  });
+}
+
+function adminReset(){
+  if(!confirm("This will DELETE all topics, questions, and student data. Are you sure?")) return;
+  socket.emit("admin-reset",(res)=>{
+    if(!res.ok){ alert(res.msg); return; }
+    adminTopics = [];
+    isPublished = false;
+    renderAdminTopics();
+    renderPublishStatus();
+  });
+}
+
+/* ── Question Editor ───────────────────────────── */
+function openQuestionEditor(index){
+  editingTopicIndex = index;
+  document.getElementById("aq-topic-name").textContent = adminTopics[index].name;
+  show("ph-admin-questions");
+  document.getElementById("aq-form-card").style.display = isPublished ? "none" : "";
+  loadQuestions();
+}
+
+function loadQuestions(){
+  socket.emit("admin-get-questions",{topicIndex:editingTopicIndex},(res)=>{
+    if(!res.ok) return;
+    editingQuestions = res.questions;
+    renderQuestions();
+  });
+}
+
+function renderQuestions(){
+  const list = document.getElementById("aq-list");
+  document.getElementById("aq-count").textContent = editingQuestions.length;
+  const keys = ["A","B","C","D"];
+  if(editingQuestions.length===0){
+    list.innerHTML = '<div style="text-align:center;color:var(--dm);padding:16px">No questions yet</div>';
+    return;
+  }
+  list.innerHTML = editingQuestions.map((q,i)=>{
+    return `<div class="q-item">
+      <div class="qi-text">${(i+1)+'. '+esc(q.q)}</div>
+      <div class="qi-opts">${q.o.map((o,j)=>
+        `<span class="qi-opt${j===q.a?' correct':''}">${keys[j]}: ${esc(o)}</span>`
+      ).join("")}</div>
+      ${!isPublished?`<div class="qi-actions"><button class="btn sm danger" onclick="adminRemoveQuestion(${i})">Remove</button></div>`:''}
+    </div>`;
+  }).join("");
+}
+
+function adminAddQuestion(){
+  const errEl = document.getElementById("aq-err");
+  const text = document.getElementById("aq-text").value.trim();
+  const optA = document.getElementById("aq-opt-a").value.trim();
+  const optB = document.getElementById("aq-opt-b").value.trim();
+  const optC = document.getElementById("aq-opt-c").value.trim();
+  const optD = document.getElementById("aq-opt-d").value.trim();
+  const correctEl = document.querySelector('input[name="correct-ans"]:checked');
+
+  if(!text){ errEl.textContent="Enter question text."; return; }
+  if(!optA||!optB||!optC||!optD){ errEl.textContent="Fill all four options."; return; }
+  if(!correctEl){ errEl.textContent="Select the correct answer."; return; }
+
+  const question = { q:text, o:[optA,optB,optC,optD], a:parseInt(correctEl.value) };
+  errEl.textContent="Adding...";
+
+  socket.emit("admin-add-question",{topicIndex:editingTopicIndex, question},(res)=>{
+    if(!res.ok){ errEl.textContent=res.msg; return; }
+    errEl.textContent="";
+    adminTopics[editingTopicIndex].questionCount = res.questionCount;
+    editingQuestions.push(question);
+    renderQuestions();
+    document.getElementById("aq-text").value="";
+    document.getElementById("aq-opt-a").value="";
+    document.getElementById("aq-opt-b").value="";
+    document.getElementById("aq-opt-c").value="";
+    document.getElementById("aq-opt-d").value="";
+    document.querySelectorAll('input[name="correct-ans"]').forEach(r=>r.checked=false);
+  });
+}
+
+function adminRemoveQuestion(qIndex){
+  socket.emit("admin-remove-question",{topicIndex:editingTopicIndex, questionIndex:qIndex},(res)=>{
+    if(!res.ok){ alert(res.msg); return; }
+    adminTopics[editingTopicIndex].questionCount = res.questionCount;
+    editingQuestions.splice(qIndex,1);
+    renderQuestions();
+  });
+}
+
+function backToAdminDash(){
+  show("ph-admin-dash");
+  renderAdminTopics();
+  renderPublishStatus();
+}
+
+/* ══════════════════════════════════════════════════
+   STUDENT FLOW
+   ══════════════════════════════════════════════════ */
+
+function doLogin(){
+  const name = document.getElementById("inp-name").value.trim();
+  const pass = document.getElementById("inp-pass").value.trim();
+  const errEl = document.getElementById("login-err");
+  if(!name){ errEl.textContent="Please enter your name."; return; }
+  if(!pass){ errEl.textContent="Please enter the password."; return; }
+  errEl.textContent="Logging in...";
+  socket.emit("login",{name,password:pass},(res)=>{
+    if(!res.ok){ errEl.textContent=res.msg; return; }
+    myName = name;
+    errEl.textContent="";
+    show("ph-topics");
+  });
+}
+document.getElementById("inp-name").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("inp-pass").focus()});
+document.getElementById("inp-pass").addEventListener("keydown",e=>{if(e.key==="Enter")doLogin()});
+
+/* ── Topics ─────────────────────────────────────── */
+socket.on("room-info",(info)=>{
+  const grid = document.getElementById("topic-grid");
+  grid.innerHTML = info.map((r,i)=>{
+    const left = r.max - r.count;
+    const almostFull = left <= 3 && left > 0;
+    return `<div class="topic-card${r.full?' full':''}" onclick="${r.full?'':'joinTopic('+i+')'}">
+      ${r.full?'<div class="t-badge">FULL</div>':''}
+      <div class="t-name">${esc(r.name)}</div>
+      <div class="t-seats${almostFull?' almost':''}">${r.count}/${r.max} joined${almostFull?' · '+left+' seats left':''} · ${r.questionCount} questions</div>
+    </div>`;
+  }).join("");
+});
+
+function joinTopic(index){
+  const errEl = document.getElementById("topic-err");
+  errEl.textContent = "Joining...";
+  socket.emit("join-topic",{topicIndex:index,name:myName},(res)=>{
+    if(!res.ok){ errEl.textContent=res.msg; return; }
+    errEl.textContent="";
+    myTopic = index;
+    myTopicName = res.topic;
+    questions = res.questions;
+    document.getElementById("wait-topic").textContent = res.topic;
+    document.getElementById("wait-info").textContent = "You are in this room. Begin when you're ready.";
+    show("ph-waiting");
+  });
+}
+
+/* ── Waiting Room ───────────────────────────────── */
+socket.on("room-students",(data)=>{
+  if(data.topicIndex !== myTopic) return;
+  const el = document.getElementById("wait-students");
+  if(data.students.length === 0){
+    el.innerHTML = '<div style="text-align:center;color:var(--dm);padding:20px">No students yet</div>';
+    return;
+  }
+  el.innerHTML = data.students.map((s,i)=>{
+    const isMe = s.name.toLowerCase() === myName.toLowerCase();
+    return `<div class="student-row${isMe?' me':''}">
+      <div class="s-num">${i+1}</div>
+      <div class="s-name">${esc(s.name)}${isMe?' (You)':''}</div>
+      ${s.finished
+        ? '<span class="s-score">'+s.score+'/'+s.total*10+'</span><span class="s-status done">Done</span>'
+        : '<span class="s-status waiting">Waiting</span>'}
+    </div>`;
+  }).join("");
+  if(document.getElementById("ph-results").classList.contains("on")){
+    updateLeaderboard(data.students);
+  }
+});
+
+/* ── Start Quiz ─────────────────────────────────── */
+function beginQuiz(){
+  myScore = 0; myCorrect = 0; curQ = 0;
+  document.getElementById("quiz-topic").textContent = myTopicName;
+  show("ph-quiz");
+  showQuestion();
+}
+
+/* ── Quiz Logic ─────────────────────────────────── */
+function showQuestion(){
+  if(curQ >= questions.length){ finishTest(); return; }
+  answered = false;
+  const q = questions[curQ];
+  document.getElementById("quiz-progress").textContent = (curQ+1)+" / "+questions.length;
+  document.getElementById("q-num").textContent = "Question "+(curQ+1)+" of "+questions.length;
+
+  const parts = q.q.split("\n");
+  let textPart = q.q;
+  let codePart = null;
+  const codeIdx = parts.findIndex(p => /^[a-zA-Z_]/.test(p.trim()) && parts.indexOf(p) > 0
+    && (p.includes('=') || p.includes('(') || p.includes(':') || p.includes('print') || p.includes('for') || p.includes('if') || p.includes('while') || p.includes('def') || p.includes('range')));
+  if(codeIdx > 0){
+    textPart = parts.slice(0, codeIdx).join("\n");
+    codePart = parts.slice(codeIdx).join("\n");
+  }
+
+  document.getElementById("q-text").textContent = textPart;
+  const codeEl = document.getElementById("q-code");
+  if(codePart){ codeEl.textContent = codePart; codeEl.hidden = false; }
+  else { codeEl.hidden = true; }
+
+  const keys = ["A","B","C","D"];
+  document.getElementById("q-opts").innerHTML = q.o.map((o,i)=>
+    `<button class="opt-btn" onclick="pickAnswer(${i})">
+      <span class="opt-key">${keys[i]}</span><span>${esc(o)}</span>
+    </button>`
+  ).join("");
+
+  document.getElementById("feedback").className = "feedback";
+
+  timeLeft = TIMER_SEC;
+  const fill = document.getElementById("timer-fill");
+  fill.style.width = "100%";
+  fill.classList.remove("danger");
+  clearInterval(timerInt);
+  const t0 = Date.now();
+  timerInt = setInterval(()=>{
+    const elapsed = (Date.now()-t0)/1000;
+    timeLeft = Math.max(0, TIMER_SEC - elapsed);
+    fill.style.width = (timeLeft/TIMER_SEC)*100+"%";
+    if(timeLeft/TIMER_SEC < 0.25) fill.classList.add("danger");
+    if(timeLeft <= 0){ clearInterval(timerInt); if(!answered) timeUp(); }
+  },50);
+}
+
+function pickAnswer(idx){
+  if(answered) return;
+  answered = true;
+  clearInterval(timerInt);
+  const q = questions[curQ];
+  const correct = idx === q.a;
+  if(correct){ myCorrect++; myScore += 10; }
+  socket.emit("submit-answer",{topicIndex:myTopic, questionIndex:curQ, answerIndex:idx});
+  const btns = document.querySelectorAll(".opt-btn");
+  btns.forEach((b,i)=>{
+    b.classList.add("locked");
+    if(i === q.a) b.classList.add("correct");
+    else if(i === idx && !correct) b.classList.add("wrong");
+  });
+  const fb = document.getElementById("feedback");
+  if(correct){
+    fb.className = "feedback show right";
+    fb.textContent = "✅ Correct! +10 marks";
+  } else {
+    fb.className = "feedback show wrong";
+    fb.textContent = "❌ Wrong! Correct answer: " + ["A","B","C","D"][q.a];
+  }
+  setTimeout(()=>{ curQ++; showQuestion(); }, 2200);
+}
+
+function timeUp(){
+  answered = true;
+  const q = questions[curQ];
+  socket.emit("submit-answer",{topicIndex:myTopic, questionIndex:curQ, answerIndex:-1});
+  const btns = document.querySelectorAll(".opt-btn");
+  btns.forEach((b,i)=>{ b.classList.add("locked"); if(i===q.a) b.classList.add("correct"); });
+  const fb = document.getElementById("feedback");
+  fb.className = "feedback show wrong";
+  fb.textContent = "⏰ Time's up! Correct answer: " + ["A","B","C","D"][q.a];
+  setTimeout(()=>{ curQ++; showQuestion(); }, 2200);
+}
+
+function finishTest(){
+  clearInterval(timerInt);
+  socket.emit("finish-test",{topicIndex:myTopic});
+}
+
+/* ── Results ────────────────────────────────────── */
+socket.on("your-result",(data)=>{
+  show("ph-results");
+  renderScoreboard(data);
+});
+
+function renderScoreboard(data){
+  const pct = Math.round((data.correct/data.total)*100);
+  let emoji = "📝";
+  if(pct >= 90) emoji = "🏆";
+  else if(pct >= 70) emoji = "🌟";
+  else if(pct >= 50) emoji = "👍";
+  const sb = document.getElementById("scoreboard");
+  sb.innerHTML = `
+    <div class="trophy">${emoji}</div>
+    <div class="sb-title">Assessment Complete!</div>
+    <div class="sb-topic">Room: ${esc(data.topic)}</div>
+    <div class="my-score-card">
+      <div class="ms-label">Your Score</div>
+      <div class="ms-score">${data.score} / ${data.total * 10}</div>
+      <div class="ms-detail">${data.correct} out of ${data.total} correct &middot; ${pct}%</div>
+    </div>
+    <div class="leaderboard">
+      <div class="lb-header">Room Leaderboard &mdash; ${esc(data.topic)}</div>
+      <div id="lb-rows"><div style="padding:16px;text-align:center;color:var(--dm)">Loading results...</div></div>
+    </div>
+    <div class="bottom-actions">
+      <button class="btn" onclick="location.reload()">Take Another Topic</button>
+    </div>
+  `;
+}
+
+function updateLeaderboard(students){
+  const container = document.getElementById("lb-rows");
+  if(!container) return;
+  const finished = students.filter(s=>s.finished).sort((a,b)=>b.score - a.score);
+  const waiting = students.filter(s=>!s.finished);
+  let html = "";
+  finished.forEach((s,i)=>{
+    const isMe = s.name.toLowerCase() === myName.toLowerCase();
+    const rankClass = i===0?"g":i===1?"s":i===2?"b":"n";
+    html += `<div class="lb-row${isMe?' me-row':''}">
+      <div class="lb-rank ${rankClass}">${i+1}</div>
+      <div class="lb-name">${esc(s.name)}${isMe?' (You)':''}</div>
+      <div class="lb-correct">${s.correct}/${s.total}</div>
+      <div class="lb-score">${s.score}</div>
+    </div>`;
+  });
+  waiting.forEach(s=>{
+    const isMe = s.name.toLowerCase() === myName.toLowerCase();
+    html += `<div class="lb-row${isMe?' me-row':''}">
+      <div class="lb-rank n">-</div>
+      <div class="lb-name">${esc(s.name)}${isMe?' (You)':''}</div>
+      <div class="lb-waiting">Still taking test...</div>
+    </div>`;
+  });
+  if(!html) html = '<div style="padding:16px;text-align:center;color:var(--dm)">No results yet</div>';
+  container.innerHTML = html;
+}
+
+/* ── Keyboard shortcuts ─────────────────────────── */
+document.addEventListener("keydown",e=>{
+  if(answered) return;
+  if(!document.getElementById("ph-quiz").classList.contains("on")) return;
+  const m = {"1":0,"2":1,"3":2,"4":3,"a":0,"b":1,"c":2,"d":3};
+  const idx = m[e.key.toLowerCase()];
+  if(idx !== undefined) pickAnswer(idx);
+});
+
+/* ── Global Leaderboard ────────────────────────── */
+function openLeaderboard(){
+  document.getElementById("lb-overlay").classList.add("open");
+  document.getElementById("lb-tab").classList.add("active");
+  fetchLeaderboard();
+}
+function closeLeaderboard(){
+  document.getElementById("lb-overlay").classList.remove("open");
+  document.getElementById("lb-tab").classList.remove("active");
+}
+function fetchLeaderboard(){
+  const container = document.getElementById("lb-rooms-container");
+  container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--dm)">Loading...</div>';
+  socket.emit("get-leaderboard",(data)=>{
+    if(!data || data.length===0){
+      container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--dm)">No topics published yet</div>';
+      return;
+    }
+    let html = "";
+    data.forEach((room,i)=>{
+      const hasStudents = room.students.length > 0 || room.active > 0;
+      html += '<div class="lb-room">';
+      html += '<div class="lb-room-header'+(hasStudents?' expanded':'')+'" onclick="toggleRoom(this)">';
+      html += '<span class="rh-name">'+esc(room.topic)+'</span>';
+      html += '<span style="display:flex;align-items:center;gap:8px">';
+      html += '<span class="rh-count">'+room.totalJoined+' joined</span>';
+      html += '<span class="rh-arrow">▼</span></span>';
+      html += '</div>';
+      html += '<div class="lb-room-body'+(hasStudents?' open':'')+'">';
+      if(room.students.length > 0){
+        room.students.forEach((s,j)=>{
+          const rankClass = j===0?"g":j===1?"s":j===2?"b":"n";
+          const isMe = s.name.toLowerCase() === myName.toLowerCase();
+          html += '<div class="lb-row'+(isMe?' me-row':'')+'">';
+          html += '<div class="lb-rank '+rankClass+'">'+(j+1)+'</div>';
+          html += '<div class="lb-name">'+esc(s.name)+(isMe?' (You)':'')+'</div>';
+          html += '<div class="lb-correct">'+s.correct+'/'+s.total+'</div>';
+          html += '<div class="lb-score">'+s.score+' pts</div>';
+          html += '</div>';
+        });
+      } else if(room.active === 0){
+        html += '<div class="lb-empty">No students have completed this topic yet</div>';
+      }
+      if(room.active > 0){
+        html += '<div class="lb-active-note">⏳ '+room.active+' student'+(room.active>1?'s':'')+' still taking the test</div>';
+      }
+      html += '</div></div>';
+    });
+    container.innerHTML = html;
+  });
+}
+function toggleRoom(header){
+  header.classList.toggle("expanded");
+  header.nextElementSibling.classList.toggle("open");
+}
+
+/* ── Connection status ──────────────────────────── */
+socket.on("connect_error",()=>{
+  const el = document.getElementById("login-err");
+  if(el) el.textContent = "Cannot connect to server. Please refresh.";
+});
+</script>
+</body>
+</html>
